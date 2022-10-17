@@ -104,4 +104,25 @@ contract Exchange is ERC20 {
         (bool sent, ) = payable(msg.sender).call{value: ethBought}("");
         require(sent, "Failed to send ether");
     }
+
+    function removeLiquidity(uint256 _amount)
+        public
+        returns (uint256, uint256)
+    {
+        require(_amount > 0, "invalid amount");
+
+        uint256 ethAmount = (address(this).balance * _amount) / totalSupply();
+        uint256 tokenAmount = (getReserve() * _amount) / totalSupply();
+
+        _burn(msg.sender, _amount); // burn LP tokens
+
+        // transfer ETH
+        (bool sent, ) = payable(msg.sender).call{value: ethAmount}("");
+        require(sent, "Failed to send ether");
+
+        // transfer ERC20 token
+        IERC20(tokenAddress).transfer(msg.sender, tokenAmount);
+
+        return (ethAmount, tokenAmount);
+    }
 }
